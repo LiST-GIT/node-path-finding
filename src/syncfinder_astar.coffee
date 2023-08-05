@@ -1,3 +1,4 @@
+{Worker} = require "jest-worker"
 Heap = require "./heap"
 
 openList = new Heap()
@@ -19,6 +20,8 @@ locToH = null
 locToF = null
 
 locToParent = null
+
+worker = null
 
 SQRT2 = Math.SQRT2
 
@@ -46,7 +49,7 @@ syncfinder_astar =
     return syncfinder_astar.findPath(start >>> 16 , start & 0xffff, end >>> 16, end & 0xffff, theGrid)
 
   # find a path of giving x, y brick locations
-  findPath : (startX, startY, endX, endY, theGrid, allowDiagonal=false, dontCrossCorners=false) ->
+  findPath : (startX, startY, endX, endY, theGrid, allowDiagonal=false, crossCorners=0) ->
 
     # validate arguments
     if isNaN(startX) or startX < 0 or isNaN(startY) or startY < 0 or isNaN(endX) or endX < 0 or isNaN(endY) or endY < 0 or not theGrid
@@ -87,7 +90,7 @@ syncfinder_astar =
       # get neighbors of the current node
       nodeX = node >>> 16
       nodeY = node & 0xffff
-      neighbors = grid.getNeighbors(nodeX , nodeY, allowDiagonal, dontCrossCorners)
+      neighbors = grid.getNeighbors(nodeX , nodeY, allowDiagonal, crossCorners)
 
       #console.log "[syncfinder_astar::findPath] process node:#{node}, x:#{nodeX}, y:#{nodeY}, neighbors:#{neighbors}"
 
@@ -125,6 +128,18 @@ syncfinder_astar =
     # fail to find the path
     return null
 
+  startWorker : (opts = {}) ->
+    if worker is null
+      worker = new Worker(require.resolve('./worker.js'),{enableWorkerThreads:true,...opts})
+    return worker
+
+  endWorker : ->
+    return worker?.end()
+
+  findPathAsync : (startX, startY, endX, endY, theGrid, allowDiagonal=false, crossCorners=0) ->
+    unless worker
+      throw new Error "worker is not running"
+    return worker.findPath(startX, startY, endX, endY, theGrid, allowDiagonal, crossCorners)
 
 
 module.exports = syncfinder_astar

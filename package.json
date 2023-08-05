@@ -1,16 +1,19 @@
 {
-  "name": "node-pathfinding",
+  "name": "node-pathfinding-worker",
     "version": "0.2.6",
     "description": "a Node.JS implementation for AStar path finding algorithm. This implementation uses primitive data types (Number and Byte/Buffer) to present location and block data that significantly improve the speed and have a good control on memory consumption",
-    "homepage": "https://github.com/yi/node-path-finding",
+    "homepage": "https://github.com/LiST-GIT/node-path-finding",
     "keywords": ["algorithm", "game", "astar", "grid", "movement", "multiplayer", "pathfinding" ],
     "author": {
-      "name": "yi",
-      "email": "yi2004@gmail.com",
-      "url": "https://github.com/yi"
+      "name": "LiST",
+      "email": "316887378@qq.com",
+      "url": "https://github.com/LiST-GIT"
     },
     "main": "./index.js",
-    "dependencies": {},
+    "dependencies": {
+      "coffeescript": ">=2.7.0",
+      "jest-worker": ">=29.6.2"
+    },
     "devDependencies": {
       "memwatch": ">=0"
     },
@@ -19,7 +22,7 @@
     },
     "repository": {
       "type": "git",
-      "url": "git://github.com/yi/node-path-finding.git"
+      "url": "git://github.com/LiST-GIT/node-path-finding.git"
     },
     "licenses": [
     {
@@ -29,6 +32,8 @@
   ],
     "readmeFilename": "README.md",
     "scripts": {
+      "watch": "coffee --watch --output lib/ src/",
+      "compile": "coffee --compile --output lib/ src/",
       "test": "node tests/sync_astar_continue_test.js "
     },
     "license": "MIT"

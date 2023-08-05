@@ -1,4 +1,6 @@
 # an data representation of the map grid, on which path finding occurs
+syncfinder_astar = require "./syncfinder_astar"
+
 class Grid
 
 
@@ -11,7 +13,7 @@ class Grid
       console.log "ERROR [grid$::bytesFrom2DArray] bad arguments, width:#{width}, height:#{height}, array2d:#{array2d}"
       return null
 
-    buf = new Buffer(Math.ceil(width * height / 8))
+    buf = Buffer.alloc(Math.ceil(width * height / 8))
     #console.log "len:#{buf.length}"
     buf.fill(255) # fill all bits as blocked
 
@@ -33,11 +35,11 @@ class Grid
   # @param {uint} height of the map grid
   # @param {Buffer} bytes of the map grid,  1: means blocked, 0: means walkable
   constructor: (@width, @height, @bytes) ->
-    unless width > 0 and height > 0 and Buffer.isBuffer(bytes)
-      throw new Error "bad arguments, width:#{width}, height:#{height}, bytes:#{bytes}"
+    unless @width > 0 and @height > 0 and Buffer.isBuffer(@bytes)
+      throw new Error "bad arguments, width:#{@width}, height:#{@height}, bytes:#{@bytes}"
 
-    unless bytes.length is Math.ceil(width * height / 8)
-      throw new Error "bytes length mismatch, width:#{width}, height:#{height}, bytes.length:#{bytes.length}"
+    unless @bytes.length is Math.ceil(@width * @height / 8)
+      throw new Error "bytes length mismatch, width:#{@width}, height:#{@height}, bytes.length:#{@bytes.length}"
 
 
   # Determine whether the node at the given position is walkable.
@@ -87,10 +89,9 @@ class Grid
   # @param {uint}  x
   # @param {uint}  y
   # @param {boolean} allowDiagonal
-  # @param {boolean} dontCrossCorners
+  # @param {uint} crossCorners 0: strict 1: loose 2: free
   # @return {uint[]} a list of walkable neighbors brick loc
-  getNeighbors : (x, y, allowDiagonal=false, dontCrossCorners=false) ->
-    #console.log  x, y, allowDiagonal, dontCrossCorners
+  getNeighbors : (x, y, allowDiagonal=false, crossCorners=0) ->
     return null if x < 0 or y < 0 or x >= @width or y >= @height # out bound
     # TODO:
     #   should return null when brick is blocked?
@@ -120,16 +121,21 @@ class Grid
 
     return neighbors unless allowDiagonal
 
-    if dontCrossCorners
-      d0 = s3 && s0
-      d1 = s0 && s1
-      d2 = s1 && s2
-      d3 = s2 && s3
-    else
+    if crossCorners is 2
+      d0 = true
+      d1 = true
+      d2 = true
+      d3 = true
+    else if crossCorners is 1
       d0 = s3 || s0
       d1 = s0 || s1
       d2 = s1 || s2
       d3 = s2 || s3
+    else
+      d0 = s3 && s0
+      d1 = s0 && s1
+      d2 = s1 && s2
+      d3 = s2 && s3
 
     # ↖
     if (d0 && @isWalkableAt(x - 1, y - 1)) then neighbors.push((x - 1) << 16 | (y - 1))
@@ -152,6 +158,20 @@ class Grid
       y = (Math.random() * @height) >>> 0
       return x << 16 | y if @isWalkableAt(x,y)
 
+  getARandomWalkable : ->
+    loop
+      x = (Math.random() * @width) >>> 0
+      y = (Math.random() * @height) >>> 0
+      return {x, y} if @isWalkableAt(x,y)
+
+  findPath : (startX, startY, endX, endY, allowDiagonal=false, crossCorners=0) ->
+    return syncfinder_astar.findPath(startX, startY, endX, endY, @, allowDiagonal, crossCorners)
+
+  findPathSync : (startX, startY, endX, endY, allowDiagonal=false, crossCorners=0) ->
+    return syncfinder_astar.findPath(startX, startY, endX, endY, @, allowDiagonal, crossCorners)
+
+  findPathAsync : (startX, startY, endX, endY, allowDiagonal=false, crossCorners=0) ->
+    return syncfinder_astar.findPathAsync(startX, startY, endX, endY, @, allowDiagonal, crossCorners)
 
   # print out the block data for human inspection
   # @param {uint} startLoc the start brick loc

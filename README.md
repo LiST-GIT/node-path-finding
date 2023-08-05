@@ -31,16 +31,28 @@ width = 4;
 
 height = 5;
 
+pathfinding.startWorker()
+
 // generate grid from 2D array
 buf = pathfinding.bytesFrom2DArray(width, height, array2d);
 grid = pathfinding.buildGrid(width, height, buf);
 
 path = pathfinding.findPath(1, 0, 1, 4, grid);
+console.log("path:" + path);
 
+path = await pathfinding.findPathAsync(1, 0, 1, 4, grid);
+console.log("path:" + path);
+
+path = grid.findPath(1, 0, 1, 4);
+console.log("path:" + path);
+
+path = await grid.findPathAsync(1, 0, 1, 4);
 console.log("path:" + path);
 
 // print the path
 console.log("path on grid :" + (grid.toString(1 << 16 | 0, 1 << 16 | 4, path)));
+
+pathfinding.endWorker()
 
 // output:
 // path:65536,131072,131073,196609,196610,196611,196612,131076,65540

@@ -32,7 +32,7 @@ memwatch.on 'stats', (stats)->
 
 
 # uncompress block data
-zlib.inflate new Buffer(data['blockdata'],'base64'), (err, buf) ->
+zlib.inflate Buffer.from(data['blockdata'],'base64'), (err, buf) ->
   if err?
     throw "FATAL...fail to inflate scene asset json"
     return
